@@ -1,0 +1,10 @@
+Пример использования
+==================================
+
+<?php
+require 'LittleSMS.class.php';
+
+$api = new LittleSMS('vasya', 'my-super-secret-api-key');
+
+echo 'Мой баланс: ' . $api->getBalance(), PHP_EOL;
+echo 'Отправка СМС: ' . $api->sendSMS('+79221112233, +79634445566', 'Бугагашенька!') ? 'OK' : ':(', PHP_EOL;
