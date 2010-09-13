@@ -15,7 +15,8 @@ class LittleSMS
         $user = null,
         $key  = null,
         $testMode = 0,
-        $url = 'http://littlesms.ru/api/';
+        $url = 'littlesms.ru/api/',
+        $useSSL = true;
 
     /**
      * Конструктор
@@ -24,10 +25,11 @@ class LittleSMS
      * @param string $key
      * @param integer $testMode
      */
-    public function __construct($user, $key, $testMode = 0)
+    public function __construct($user, $key, $useSSL = true, $testMode = 0)
     {
         $this->user = $user;
         $this->key = $key;
+        $this->useSSL = $useSSL;
         $this->testMode = $testMode;
     }
 
@@ -72,7 +74,13 @@ class LittleSMS
         $params = array_merge(array('user' => $this->user), $params);
         $sign = $this->generateSign($params);
 
-        $ch = curl_init($this->url . $function);
+        $url = ($this->useSSL ? 'https://' : 'http://') . $this->url . $function;
+
+        $ch = curl_init($url);
+        if ($this->useSSL) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        }
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge($params, array('sign' => $sign))));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
