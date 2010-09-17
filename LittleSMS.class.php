@@ -5,18 +5,23 @@
  *
  * Функции:
  *  - отправка SMS
+ *  - проверка статуса доставки сообщений
  *  - запрос баланса
  *
  * @author Рустам Миниахметов <pycmam@gmail.com>
  */
 class LittleSMS
 {
+    const REQUEST_SUCCESS = 'success';
+    const REQUEST_ERROR = 'error';
+
     protected
-        $user = null,
-        $key  = null,
-        $testMode = 0,
-        $url = 'littlesms.ru/api/',
-        $useSSL = true;
+        $user       = null,
+        $key        = null,
+        $testMode   = false,
+        $url        = 'littlesms.ru/api',
+        $useSSL     = false,
+        $response   = null;
 
     /**
      * Конструктор
@@ -25,7 +30,7 @@ class LittleSMS
      * @param string $key
      * @param integer $testMode
      */
-    public function __construct($user, $key, $useSSL = true, $testMode = 0)
+    public function __construct($user, $key, $useSSL = false, $testMode = false)
     {
         $this->user = $user;
         $this->key = $key;
@@ -38,28 +43,50 @@ class LittleSMS
      *
      * @param string|array $recipients
      * @param string $message
-     * @return boolean
+     * @param string $sender
+     * @param boolean $flash
+     *
+     * @return boolean|integer
      */
-    public function sendSMS($recipients, $message)
+    public function sendSMS($recipients, $message, $sender = null, $flash = false)
     {
         $response = $this->makeRequest('send', array(
-            'recipients' => is_array($recipients) ? join(', ', $recipients) : $recipients,
-            'message' => $message,
-            'test' => $this->testMode,
+            'recipients'    => is_array($recipients) ? join(',', $recipients) : $recipients,
+            'message'       => $message,
+            'sender'        => $sender,
+            'flash'         => (int) $flash,
+            'test'          => (int) $this->testMode,
         ));
 
-        return $response->status == 'success';
+        return $response['status'] == self::REQUEST_SUCCESS;
+    }
+
+    /**
+     * Проверить статус доставки сообщений
+     *
+     * @param array $messagesId
+     *
+     * @return boolean|array
+     */
+    public function checkStatus(array $messagesId)
+    {
+        $response = $this->makeRequest('status', array(
+            'messages_id' => join(',', $messagesId),
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['messages'] : false;
     }
 
     /**
      * Запросить баланс
+     *
      * @return boolean|float
      */
     public function getBalance()
     {
         $response = $this->makeRequest('balance');
 
-        return $response->status == 'success' ? (float) $response->balance : false;
+        return $response['status'] == self::REQUEST_SUCCESS ? (float) $response['balance'] : false;
     }
 
     /**
@@ -67,6 +94,7 @@ class LittleSMS
      *
      * @param string $function
      * @param array $params
+     *
      * @return stdClass
      */
     protected function makeRequest($function, array $params = array())
@@ -74,7 +102,7 @@ class LittleSMS
         $params = array_merge(array('user' => $this->user), $params);
         $sign = $this->generateSign($params);
 
-        $url = ($this->useSSL ? 'https://' : 'http://') . $this->url . $function;
+        $url = ($this->useSSL ? 'https://' : 'http://') . $this->url .'/'. $function;
 
         $ch = curl_init($url);
         if ($this->useSSL) {
@@ -84,8 +112,48 @@ class LittleSMS
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge($params, array('sign' => $sign))));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        return json_decode(curl_exec($ch));
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        echo $response, PHP_EOL;
+
+        return $this->response = json_decode($response, true);
     }
+
+    /**
+     * Возвращает ответ сервера последнего запроса
+     *
+     * @return array
+     */
+    public function getResponse()
+    {
+        return $this->response;
+    }
+
+
+    /**
+     * Установить адрес шлюза
+     *
+     * @param string $url
+     * @return void
+     */
+    public function setUrl($url)
+    {
+        $this->url = $url;
+    }
+
+
+    /**
+     * Получить адрес сервера
+     *
+     * @return string
+     */
+    public function getUrl()
+    {
+        return $this->url;
+    }
+
 
     /**
      * Сгенерировать подпись

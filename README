@@ -7,4 +7,13 @@ require 'LittleSMS.class.php';
 $api = new LittleSMS('vasya', 'my-super-secret-api-key');
 
 echo 'Мой баланс: ' . $api->getBalance(), PHP_EOL;
-echo 'Отправка СМС: ' . $api->sendSMS('+79221112233, +79634445566', 'Бугагашенька!') ? 'OK' : ':(', PHP_EOL;
+
+$result = $api->sendSMS('+79221112233, +79634445566', 'Бугагашенька!', 'Vasya');
+echo 'Отправка СМС: ' . $result ? 'Сообщение отправлено!' : 'Сообщение НЕ отправлено!', PHP_EOL;
+
+if ($result) {
+    $request = $api->getRequest();
+    $status = $api->getStatus($request['messages_id']);
+
+    echo 'Статусы сообщений: ', PHP_EOL, print_r($status, true);
+}
