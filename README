@@ -12,8 +12,8 @@ $result = $api->sendSMS('+79221112233, +79634445566', 'Бугагашенька!
 echo 'Отправка СМС: ' . $result ? 'Сообщение отправлено!' : 'Сообщение НЕ отправлено!', PHP_EOL;
 
 if ($result) {
-    $request = $api->getRequest();
-    $status = $api->getStatus($request['messages_id']);
+    $response = $api->getResponse();
+    $status = $api->getStatus($response['messages_id']);
 
     echo 'Статусы сообщений: ', PHP_EOL, print_r($status, true);
 }

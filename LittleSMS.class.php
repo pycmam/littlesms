@@ -48,13 +48,12 @@ class LittleSMS
      *
      * @return boolean|integer
      */
-    public function sendSMS($recipients, $message, $sender = null, $flash = false)
+    public function sendSMS($recipients, $message, $sender = null)
     {
         $response = $this->makeRequest('send', array(
             'recipients'    => is_array($recipients) ? join(',', $recipients) : $recipients,
             'message'       => $message,
             'sender'        => $sender,
-            'flash'         => (int) $flash,
             'test'          => (int) $this->testMode,
         ));
 
@@ -64,12 +63,16 @@ class LittleSMS
     /**
      * Проверить статус доставки сообщений
      *
-     * @param array $messagesId
+     * @param string|array $messagesId
      *
      * @return boolean|array
      */
-    public function checkStatus(array $messagesId)
+    public function checkStatus($messagesId)
     {
+        if (! is_array($messagesId)) {
+            $messagesId = array($messagesId);
+        }
+
         $response = $this->makeRequest('status', array(
             'messages_id' => join(',', $messagesId),
         ));
@@ -115,8 +118,6 @@ class LittleSMS
 
         $response = curl_exec($ch);
         curl_close($ch);
-
-        echo $response, PHP_EOL;
 
         return $this->response = json_decode($response, true);
     }
