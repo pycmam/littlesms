@@ -113,7 +113,7 @@ class LittleSMS
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         }
         curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge($params, array('sign' => $sign))));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post = http_build_query(array_merge($params, array('sign' => $sign)), '', '&'));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
         $response = curl_exec($ch);
