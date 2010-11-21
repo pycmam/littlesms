@@ -106,18 +106,31 @@ class LittleSMS
         $sign = $this->generateSign($params);
 
         $url = ($this->useSSL ? 'https://' : 'http://') . $this->url .'/'. $function;
+        $post = http_build_query(array_merge($params, array('sign' => $sign)), '', '&');
 
-        $ch = curl_init($url);
-        if ($this->useSSL) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            if ($this->useSSL) {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            }
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+            $response = curl_exec($ch);
+            curl_close($ch);
+        } else {
+            $context = stream_context_create(array(
+                'http' => array(
+                    'method' => 'POST',
+                    'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                    'content' => $post,
+                    'timeout' => 10,
+                ),
+            ));
+            $response = file_get_contents($url, false, $context);
         }
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post = http_build_query(array_merge($params, array('sign' => $sign)), '', '&'));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-        $response = curl_exec($ch);
-        curl_close($ch);
 
         return $this->response = json_decode($response, true);
     }
