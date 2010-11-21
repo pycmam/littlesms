@@ -2,18 +2,23 @@
 ==================================
 
 <?php
-require 'LittleSMS.class.php';
+require_once 'LittleSMS.class.php';
 
-$api = new LittleSMS('vasya', 'my-super-secret-api-key');
+$api = new LittleSMS('vasya', 'qwerty123', true);
 
+// запрос баланса
 echo 'Мой баланс: ' . $api->getBalance(), PHP_EOL;
 
-$result = $api->sendSMS('+79221112233, +79634445566', 'Бугагашенька!', 'Vasya');
-echo 'Отправка СМС: ' . ($result ? 'Сообщение отправлено!' : 'Сообщение НЕ отправлено!'), PHP_EOL;
+// отправка СМС
+echo 'Отправка смс: ' . $api->sendSMS('79631112233', 'Бугагашенька!', 'vasya'), PHP_EOL;
 
-if ($result) {
-    $response = $api->getResponse();
-    $status = $api->getStatus($response['messages_id']);
+// ответ предыдущего запроса
+$response = $api->getResponse();
 
-    echo 'Статусы сообщений: ', PHP_EOL, print_r($status, true);
+// запрос статуса сообщения
+$result = $api->checkStatus($response['messages_id']);
+
+foreach ($result as $message_id => $status) {
+    echo sprintf('Статус сообщения %s: %s', $message_id, $status), PHP_EOL;
 }
+
