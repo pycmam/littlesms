@@ -4,9 +4,14 @@
  * Класс для работы с сервисом LittleSMS.ru
  *
  * Функции:
- *  - отправка SMS
- *  - проверка статуса доставки сообщений
- *  - запрос баланса
+ *  - сообщения: отправка SMS, получение статусов, история
+ *  - аккаунт: проверка баланса
+ *  - контакты: добавление, обновление, удаление, список
+ *  - теги: добавление, обновление, удаление, список
+ *  - рассылки: добавление, обновление, удаление, список рассылок, отправка, история
+ *  - задания: добавление, обновление, удаление, список
+ *
+ *  подробнее: wiki.littlesms.ru
  *
  * @author Рустам Миниахметов <pycmam@gmail.com>
  */
@@ -47,15 +52,49 @@ class LittleSMS
      * @param boolean $flash
      *
      * @return boolean|integer
+     * @deprecated
      */
     public function sendSMS($recipients, $message, $sender = null)
     {
-        $response = $this->makeRequest('send', array(
-            'recipients'    => is_array($recipients) ? join(',', $recipients) : $recipients,
+        return $this->messageSend($recipients, $message, $sender);
+    }
+
+    /**
+     * Проверить статус доставки сообщений
+     *
+     * @param string|array $messagesId
+     *
+     * @return boolean|array
+     * @deprecated
+     */
+    public function checkStatus($messagesId)
+    {
+        return $this->messageStatus($messagesId);
+    }
+
+    /**
+     * Отправить SMS
+     *
+     * @param string|array $recipients
+     * @param string $message
+     * @param string $sender
+     * @param boolean $flash
+     *
+     * @return boolean|integer
+     */
+    public function messageSend($recipients, $message, $sender = null)
+    {
+        $params = array(
+            'recipients'    => $recipients,
             'message'       => $message,
             'sender'        => $sender,
-            'test'          => (int) $this->testMode,
-        ));
+        );
+
+        if ($this->testMode) {
+            $params['test'] = 1;
+        }
+
+        $response = $this->makeRequest('message/send', $params);
 
         return $response['status'] == self::REQUEST_SUCCESS;
     }
@@ -67,13 +106,13 @@ class LittleSMS
      *
      * @return boolean|array
      */
-    public function checkStatus($messagesId)
+    public function messageStatus($messagesId)
     {
         if (! is_array($messagesId)) {
             $messagesId = array($messagesId);
         }
 
-        $response = $this->makeRequest('status', array(
+        $response = $this->makeRequest('message/status', array(
             'messages_id' => join(',', $messagesId),
         ));
 
@@ -81,15 +120,331 @@ class LittleSMS
     }
 
     /**
+     * История сообщений
+     *
+     * @param array $params
+     *
+     * @return boolean|array
+     */
+    public function messageHistory($params = array())
+    {
+        $response = $this->makeRequest('message/history', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['history'] : false;
+    }
+
+    /**
      * Запросить баланс
      *
      * @return boolean|float
      */
-    public function getBalance()
+    public function userBalance()
     {
-        $response = $this->makeRequest('balance');
+        $response = $this->makeRequest('user/balance');
 
         return $response['status'] == self::REQUEST_SUCCESS ? (float) $response['balance'] : false;
+    }
+
+    /**
+     * Запросить баланс
+     *
+     * @return boolean|float
+     * @deprecated
+     */
+    public function getBalance()
+    {
+        return $this->userBalance();
+    }
+
+    /**
+     * Контакты: список контактов
+     *
+     * @param array $params
+     *
+     * @return boolean|array
+     */
+    public function contactList($params = array())
+    {
+        $response = $this->makeRequest('contact/list', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['contacts'] : false;
+    }
+
+    /**
+     * Контакты: создать
+     *
+     * @param array $params
+     *
+     * @return boolean|integer
+     */
+    public function contactCreate($params) // $phone, $name = null, $description = null, $tags = array())
+    {
+        $response = $this->makeRequest('contact/create', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    /**
+     * Контакты: обновить
+     *
+     * @param integer $id
+     * @param array $params
+     *
+     * @return boolean|integer
+     */
+    public function contactUpdate($id, $params)
+    {
+        $response = $this->makeRequest('contact/update', array_merge($params, array(
+            'id' => $id,
+        )));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    /**
+     * Контакты: удалить
+     *
+     * @param integer $id
+     *
+     * @return boolean|integer
+     */
+    public function contactDelete($id)
+    {
+        $response = $this->makeRequest('contact/delete', array(
+            'id' => is_array($id) ? join(',', $id) : $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['count'] : false;
+    }
+
+    /**
+     * Теги: список тегов
+     *
+     * @param array $params
+     *
+     * @return boolean|array
+     */
+    public function tagList($params = array())
+    {
+        $response = $this->makeRequest('tag/list', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['tags'] : false;
+    }
+
+    /**
+     * Теги: создать
+     *
+     * @param array $params
+     *
+     * @return boolean|integer
+     */
+    public function tagCreate($params)
+    {
+        $response = $this->makeRequest('tag/create', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    /**
+     * Теги: обновить
+     *
+     * @param integer $id
+     * @param array $params
+     *
+     * @return boolean|integer
+     */
+    public function tagUpdate($id, $params)
+    {
+        $response = $this->makeRequest('tag/update', array_merge($params, array(
+            'id' => $id,
+        )));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    /**
+     * Теги: удалить
+     *
+     * @param integer $id
+     *
+     * @return boolean|integer
+     */
+    public function tagDelete($id)
+    {
+        $response = $this->makeRequest('tag/delete', array(
+            'id' => is_array($id) ? join(',', $id) : $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['count'] : false;
+    }
+
+    /**
+     * Задания: список заданий
+     *
+     * @param array $params
+     *
+     * @return boolean|array
+     */
+    public function taskList($params = array())
+    {
+        $response = $this->makeRequest('task/list', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['tasks'] : false;
+    }
+
+    /**
+     * Задания: создать
+     *
+     * @param array $params
+     *
+     * @return boolean|integer
+     */
+    public function taskCreate($params)
+    {
+        $response = $this->makeRequest('task/create', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    /**
+     * Задания: обновить
+     *
+     * @param integer $id
+     * @param array $params
+     *
+     * @return boolean|integer
+     */
+    public function taskUpdate($id, $params)
+    {
+        $response = $this->makeRequest('task/update',  array_merge($params, array(
+            'id' => $id,
+        )));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    /**
+     * Задания: удалить
+     *
+     * @param integer $id
+     *
+     * @return boolean|integer
+     */
+    public function taskDelete($id)
+    {
+        $response = $this->makeRequest('task/delete', array(
+            'id' => is_array($id) ? join(',', $id) : $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['count'] : false;
+    }
+
+    /**
+     * Рассылки: список рассылок
+     *
+     * @param array $params
+     *
+     * @return boolean|array
+     */
+    public function bulkList($params = array())
+    {
+        $response = $this->makeRequest('bulk/list', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['bulks'] : false;
+    }
+
+    /**
+     * Рассылки: создать
+     *
+     * @param array $params
+     *
+     * @return boolean|integer
+     */
+    public function bulkCreate($params)
+    {
+        $response = $this->makeRequest('bulk/create', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    /**
+     * Рассылки: обновить
+     *
+     * @param integer $id
+     * @param array $params
+     *
+     * @return boolean|integer
+     */
+    public function bulkUpdate($id, $params)
+    {
+        $response = $this->makeRequest('bulk/update',  array_merge($params, array(
+            'id' => $id,
+        )));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    /**
+     * Рассылки: удалить
+     *
+     * @param array|integer $id
+     * @param array $params
+     *
+     * @return boolean|integer
+     */
+    public function bulkDelete($id)
+    {
+        $response = $this->makeRequest('bulk/delete', array(
+            'id' => is_array($id) ? join(',', $id) : $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['count'] : false;
+    }
+
+    /**
+     * Рассылки: отправить
+     *
+     * @param integer $id
+     *
+     * @return boolean|integer
+     */
+    public function bulkSend($id)
+    {
+        $response = $this->makeRequest('bulk/send', array(
+            'id' => $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['history_id'] : false;
+    }
+
+    /**
+     * Рассылки: отменить
+     *
+     * @param integer $historyId
+     *
+     * @return boolean|integer
+     */
+    public function bulkCancel($historyId)
+    {
+        $response = $this->makeRequest('bulk/cancel', array(
+            'hostory_id' => $historyId,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['history_id'] : false;
+    }
+
+    /**
+     * Рассылки: история
+     *
+     * @param array $params
+     *
+     * @return boolean|array
+     */
+    public function bulkHistory($params = array())
+    {
+        $response = $this->makeRequest('bulk/history', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['history'] : false;
     }
 
     /**
@@ -102,6 +457,7 @@ class LittleSMS
      */
     protected function makeRequest($function, array $params = array())
     {
+        $params = $this->joinArrayValues($params);
         $params = array_merge(array('user' => $this->user), $params);
         $sign = $this->generateSign($params);
 
@@ -168,6 +524,14 @@ class LittleSMS
         return $this->url;
     }
 
+    protected function joinArrayValues($params)
+    {
+        $result = array();
+        foreach ($params as $name => $value) {
+            $result[$name] = is_array($value) ? join(',', $value) : $value;
+        }
+        return $result;
+    }
 
     /**
      * Сгенерировать подпись
