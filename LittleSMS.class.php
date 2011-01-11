@@ -92,6 +92,170 @@ class LittleSMS
         return $response['status'] == self::REQUEST_SUCCESS ? (float) $response['balance'] : false;
     }
 
+    // ------------ контакты
+
+    public function contactList($params = array())
+    {
+        $response = $this->makeRequest('contact/list', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['contacts'] : false;
+    }
+
+    public function contactCreate($params) // $phone, $name = null, $description = null, $tags = array())
+    {
+        $response = $this->makeRequest('contact/create', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    public function contactUpdate($id, $params)
+    {
+        $response = $this->makeRequest('contact/update', array_merge($params, array(
+            'id' => $id,
+        )));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    public function contactDelete($id)
+    {
+        $response = $this->makeRequest('contact/delete', array(
+            'id' => is_array($id) ? join(',', $id) : $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['count'] : false;
+    }
+
+    // ------------ теги
+
+    public function tagList($params = array())
+    {
+        $response = $this->makeRequest('tag/list', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['tags'] : false;
+    }
+
+    public function tagCreate($params)
+    {
+        $response = $this->makeRequest('tag/create', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    public function tagUpdate($id, $params)
+    {
+        $response = $this->makeRequest('tag/update', array_merge($params, array(
+            'id' => $id,
+        )));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    public function tagDelete($id)
+    {
+        $response = $this->makeRequest('tag/delete', array(
+            'id' => is_array($id) ? join(',', $id) : $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['count'] : false;
+    }
+
+    // ------------ задания
+
+    public function taskList($params = array())
+    {
+        $response = $this->makeRequest('task/list', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['tasks'] : false;
+    }
+
+    public function taskCreate($params)
+    {
+        $response = $this->makeRequest('task/create', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    public function taskUpdate($id, $name)
+    {
+        $response = $this->makeRequest('task/update', array_merge($params, array(
+            'id' => $id,
+        )));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    public function taskDelete($id)
+    {
+        $response = $this->makeRequest('task/delete', array(
+            'id' => is_array($id) ? join(',', $id) : $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['count'] : false;
+    }
+
+    // ------------ рассылки
+
+    public function bulkList($params = array())
+    {
+        $response = $this->makeRequest('bulk/list', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['bulks'] : false;
+    }
+
+    public function bulkCreate($name)
+    {
+        $response = $this->makeRequest('bulk/create', array(
+            'name' => $name,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    public function bulkUpdate($id, $name)
+    {
+        $response = $this->makeRequest('bulk/update', array(
+            'id' => $id,
+            'name' => $name,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['id'] : false;
+    }
+
+    public function bulkDelete($id)
+    {
+        $response = $this->makeRequest('bulk/delete', array(
+            'id' => is_array($id) ? join(',', $id) : $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['count'] : false;
+    }
+
+    public function bulkSend($id)
+    {
+        $response = $this->makeRequest('bulk/send', array(
+            'id' => $id,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['history_id'] : false;
+    }
+
+    public function bulkCancel($historyId)
+    {
+        $response = $this->makeRequest('bulk/cancel', array(
+            'hostory_id' => $historyId,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['history_id'] : false;
+    }
+
+    public function bulkHistory($params = array())
+    {
+        $response = $this->makeRequest('bulk/history', $params);
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['history'] : false;
+    }
+
     /**
      * Отправить запрос
      *
@@ -102,6 +266,7 @@ class LittleSMS
      */
     protected function makeRequest($function, array $params = array())
     {
+        $params = $this->joinArrayValues($params);
         $params = array_merge(array('user' => $this->user), $params);
         $sign = $this->generateSign($params);
 
@@ -168,6 +333,14 @@ class LittleSMS
         return $this->url;
     }
 
+    protected function joinArrayValues($params)
+    {
+        $result = array();
+        foreach ($params as $name => $value) {
+            $result[$name] = is_array($values) ? join(',', $value) : $value;
+        }
+        return $result;
+    }
 
     /**
      * Сгенерировать подпись
