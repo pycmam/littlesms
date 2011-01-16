@@ -120,6 +120,24 @@ class LittleSMS
     }
 
     /**
+     * Запрос стоимости сообщения
+     *
+     * @param string|array $recipients
+     * @param string $message
+     *
+     * @return boolean|decimal
+     */
+    public function messagePrice($recipients, $message)
+    {
+        $response = $this->makeRequest('message/price', array(
+            'recipients'    => $recipients,
+            'message'       => $message,
+        ));
+
+        return $response['status'] == self::REQUEST_SUCCESS ? $response['price'] : false;
+    }
+
+    /**
      * История сообщений
      *
      * @param array $params
@@ -177,7 +195,7 @@ class LittleSMS
      *
      * @return boolean|integer
      */
-    public function contactCreate($params) // $phone, $name = null, $description = null, $tags = array())
+    public function contactCreate(array $params) // $phone, $name = null, $description = null, $tags = array())
     {
         $response = $this->makeRequest('contact/create', $params);
 
@@ -192,7 +210,7 @@ class LittleSMS
      *
      * @return boolean|integer
      */
-    public function contactUpdate($id, $params)
+    public function contactUpdate($id, array $params)
     {
         $response = $this->makeRequest('contact/update', array_merge($params, array(
             'id' => $id,
@@ -238,7 +256,7 @@ class LittleSMS
      *
      * @return boolean|integer
      */
-    public function tagCreate($params)
+    public function tagCreate(array $params)
     {
         $response = $this->makeRequest('tag/create', $params);
 
@@ -253,7 +271,7 @@ class LittleSMS
      *
      * @return boolean|integer
      */
-    public function tagUpdate($id, $params)
+    public function tagUpdate($id, array $params)
     {
         $response = $this->makeRequest('tag/update', array_merge($params, array(
             'id' => $id,
@@ -299,7 +317,7 @@ class LittleSMS
      *
      * @return boolean|integer
      */
-    public function taskCreate($params)
+    public function taskCreate(array $params)
     {
         $response = $this->makeRequest('task/create', $params);
 
@@ -314,7 +332,7 @@ class LittleSMS
      *
      * @return boolean|integer
      */
-    public function taskUpdate($id, $params)
+    public function taskUpdate($id, array $params)
     {
         $response = $this->makeRequest('task/update',  array_merge($params, array(
             'id' => $id,
@@ -360,7 +378,7 @@ class LittleSMS
      *
      * @return boolean|integer
      */
-    public function bulkCreate($params)
+    public function bulkCreate(array $params)
     {
         $response = $this->makeRequest('bulk/create', $params);
 
@@ -375,7 +393,7 @@ class LittleSMS
      *
      * @return boolean|integer
      */
-    public function bulkUpdate($id, $params)
+    public function bulkUpdate($id, array $params)
     {
         $response = $this->makeRequest('bulk/update',  array_merge($params, array(
             'id' => $id,
