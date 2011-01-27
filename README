@@ -7,16 +7,16 @@ require_once 'LittleSMS.class.php';
 $api = new LittleSMS('vasya', 'qwerty123', true);
 
 // запрос баланса
-echo 'Мой баланс: ' . $api->getBalance(), PHP_EOL;
+echo 'Мой баланс: ' . $api->userBalance(), PHP_EOL;
 
 // отправка СМС
-echo 'Отправка смс: ' . $api->sendSMS('79631112233', 'Бугагашенька!', 'vasya'), PHP_EOL;
+echo 'Отправка смс: ' . $api->messageSend('79631112233', 'Бугагашенька!', 'vasya'), PHP_EOL;
 
 // ответ предыдущего запроса
 $response = $api->getResponse();
 
 // запрос статуса сообщения
-$result = $api->checkStatus($response['messages_id']);
+$result = $api->messageStatus($response['messages_id']);
 
 foreach ($result as $message_id => $status) {
     echo sprintf('Статус сообщения %s: %s', $message_id, $status), PHP_EOL;
