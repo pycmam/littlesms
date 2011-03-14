@@ -476,8 +476,8 @@ class LittleSMS
     protected function makeRequest($function, array $params = array())
     {
         $params = $this->joinArrayValues($params);
-        $params = array_merge(array('user' => $this->user), $params);
         $sign = $this->generateSign($params);
+        $params = array_merge(array('user' => $this->user), $params);
 
         $url = ($this->useSSL ? 'https://' : 'http://') . $this->url .'/'. $function;
         $post = http_build_query(array_merge($params, array('sign' => $sign)), '', '&');
@@ -559,6 +559,8 @@ class LittleSMS
      */
     protected function generateSign(array $params)
     {
-        return md5(sha1(join('', $params) . $this->key));
+        ksort($params);
+
+        return md5(sha1($this->user . join('', $params) . $this->key));
     }
 }
