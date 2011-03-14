@@ -4,7 +4,11 @@
 <?php
 require_once 'LittleSMS.class.php';
 
-$api = new LittleSMS('vasya', 'qwerty123', true);
+$user = 'my-login';            // логин указанный при регистрации или логин api-аккаунта http://littlesms.ru/my/accounts
+$key  = 'my-secret-api-key';   // API-key, узнать можно тут: http://littlesms.ru/my/api или тут: http://littlesms.ru/my/accounts, если используете логин api-аккаунта
+$ssl  = false;                 // использовать защищенное SSL-соединение
+
+$api = new LittleSMS($user, $key, $ssl);
 
 // запрос баланса
 echo 'Мой баланс: ' . $api->userBalance(), PHP_EOL;
