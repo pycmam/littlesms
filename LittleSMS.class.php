@@ -445,7 +445,7 @@ class LittleSMS
     public function bulkCancel($historyId)
     {
         $response = $this->makeRequest('bulk/cancel', array(
-            'hostory_id' => $historyId,
+            'history_id' => $historyId,
         ));
 
         return $response['status'] == self::REQUEST_SUCCESS ? $response['history_id'] : false;
