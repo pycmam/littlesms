@@ -14,13 +14,17 @@ $api = new LittleSMS($user, $key, $ssl);
 echo 'Мой баланс: ' . $api->userBalance(), PHP_EOL;
 
 // отправка СМС
-echo 'Отправка смс: ' . $api->messageSend('79631112233', 'Бугагашенька!', 'vasya'), PHP_EOL;
-
-// ответ предыдущего запроса
-$response = $api->getResponse();
+$ids = $api->messageSend('79631112233', 'Бугагашенька!');
+if ($ids) {
+  echo "ID отправленных СМС:\n";
+  print_r($ids);
+} else {
+  echo "Ошибки:\n";
+  print_r($this->getResponse());
+}
 
 // запрос статуса сообщения
-$result = $api->messageStatus($response['messages_id']);
+$result = $api->messageStatus($ids);
 
 foreach ($result as $message_id => $status) {
     echo sprintf('Статус сообщения %s: %s', $message_id, $status), PHP_EOL;
