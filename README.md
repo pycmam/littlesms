@@ -3,8 +3,8 @@
     <?php
     require_once 'LittleSMS.class.php';
 
-    $user = 'my-login';            // логин указанный при регистрации или логин api-аккаунта http://littlesms.ru/my/accounts
-    $key  = 'my-secret-api-key';   // API-key, узнать можно тут: http://littlesms.ru/my/api или тут: http://littlesms.ru/my/accounts, если используете логин api-аккаунта
+    $user = 'my-login';            // логин указанный при регистрации или логин api-аккаунта http://littlesms.ru/my/settings/api
+    $key  = 'my-secret-api-key';   // API-key, узнать можно тут: http://littlesms.ru/my/settings/api
     $ssl  = false;                 // использовать защищенное SSL-соединение
 
     $api = new LittleSMS($user, $key, $ssl);
